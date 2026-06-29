@@ -40,4 +40,4 @@ jobs:
         with:
           name: Andlinux-apk
           path: artifacts/Andlinux.apk
-# AndLinux 1.5 global stable release build
+# AndLinux 1.6 stable release build

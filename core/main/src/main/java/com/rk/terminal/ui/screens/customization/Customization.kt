@@ -545,7 +545,7 @@ fun Customization(modifier: Modifier = Modifier) {
                             }
                         }
 
-                        val name = getFileNameFromUri(context,uri).toString()
+                        val name = getFileNameFromUri(context, uri) ?: uri.toString()
                         Settings.custom_font_name = name
                         fontName = name
                         fontExists = font.exists()
@@ -616,7 +616,7 @@ fun Customization(modifier: Modifier = Modifier) {
                             }
                         }
 
-                        val name = getFileNameFromUri(context,uri).toString()
+                        val name = getFileNameFromUri(context, uri) ?: uri.toString()
                         Settings.custom_background_name = name
                         backgroundName = name
 

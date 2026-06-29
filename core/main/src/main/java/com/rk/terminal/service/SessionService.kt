@@ -17,11 +17,15 @@ import com.rk.terminal.ui.screens.settings.Settings
 import com.rk.terminal.ui.screens.terminal.MkSession
 import com.termux.terminal.TerminalSession
 import com.termux.terminal.TerminalSessionClient
+import java.util.concurrent.ConcurrentHashMap
 
 class SessionService : Service() {
-    private val sessions = hashMapOf<String, TerminalSession>()
-    val sessionList = mutableStateMapOf<String,Int>()
-    var currentSession = mutableStateOf(Pair("main",com.rk.settings.Settings.working_Mode))
+    // ConcurrentHashMap because sessions are touched from multiple threads:
+    // UI thread (TerminalBackEnd.onKeyDown), binder threads (KeyShortcutHandler),
+    // and onDestroy(). A plain HashMap would corrupt on concurrent access.
+    private val sessions = ConcurrentHashMap<String, TerminalSession>()
+    val sessionList = mutableStateMapOf<String, Int>()
+    var currentSession = mutableStateOf(Pair("main", com.rk.settings.Settings.working_Mode))
 
     inner class SessionBinder : Binder() {
         fun getService():SessionService{

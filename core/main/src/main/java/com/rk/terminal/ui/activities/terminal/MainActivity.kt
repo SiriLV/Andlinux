@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.view.View
+import android.view.ViewTreeObserver
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -144,6 +145,8 @@ class MainActivity : ComponentActivity() {
     }
 
     var wasKeyboardOpen = false
+    private var keyboardLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
+
     override fun onPause() {
         super.onPause()
         wasKeyboardOpen = isKeyboardVisible
@@ -152,23 +155,36 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
 
-        val rootView = findViewById<View>(android.R.id.content)
-        rootView.viewTreeObserver.addOnGlobalLayoutListener {
-            val rect = Rect()
-            rootView.getWindowVisibleDisplayFrame(rect)
-            val screenHeight = rootView.rootView.height
-            val keypadHeight = screenHeight - rect.bottom
-            val isVisible = keypadHeight > screenHeight * 0.15
-
-            isKeyboardVisible = isVisible
+        // Avoid stacking layout listeners across onResume calls — only add once.
+        if (keyboardLayoutListener == null) {
+            val rootView = findViewById<View>(android.R.id.content)
+            val listener = ViewTreeObserver.OnGlobalLayoutListener {
+                val rect = Rect()
+                rootView.getWindowVisibleDisplayFrame(rect)
+                val screenHeight = rootView.rootView.height
+                val keypadHeight = screenHeight - rect.bottom
+                val isVisible = keypadHeight > screenHeight * 0.15
+                isKeyboardVisible = isVisible
+            }
+            keyboardLayoutListener = listener
+            rootView.viewTreeObserver.addOnGlobalLayoutListener(listener)
         }
 
-
-        if (wasKeyboardOpen && !isKeyboardVisible){
+        if (wasKeyboardOpen && !isKeyboardVisible) {
             terminalView.get()?.let {
                 val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.showSoftInput(it, InputMethodManager.SHOW_IMPLICIT)
             }
         }
+    }
+
+    override fun onDestroy() {
+        // Clean up the layout listener to avoid leaking the activity.
+        keyboardLayoutListener?.let { listener ->
+            findViewById<View>(android.R.id.content)?.viewTreeObserver
+                ?.removeOnGlobalLayoutListener(listener)
+        }
+        keyboardLayoutListener = null
+        super.onDestroy()
     }
 }

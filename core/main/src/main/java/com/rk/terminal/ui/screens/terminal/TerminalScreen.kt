@@ -5,7 +5,6 @@ import android.content.res.Configuration
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
-import android.util.TypedValue
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
@@ -78,7 +77,6 @@ import androidx.compose.ui.zIndex
 import androidx.core.view.WindowCompat
 import androidx.core.widget.doOnTextChanged
 import androidx.navigation.NavController
-import com.google.android.material.R
 import androidx.compose.ui.res.stringResource
 import com.rk.components.compose.preferences.base.PreferenceGroup
 import com.rk.libcommons.application
@@ -145,7 +143,7 @@ inline fun getComposeColor():androidx.compose.ui.graphics.Color{
 
 var showToolbar = mutableStateOf(Settings.toolbar)
 var showVirtualKeys = mutableStateOf(Settings.virtualKeys)
-var showHorizontalToolbar = mutableStateOf(Settings.toolbar)
+var showHorizontalToolbar = mutableStateOf(Settings.toolbar_in_horizontal)
 
 
 
@@ -206,58 +204,13 @@ fun TerminalScreen(
             terminalView.get()?.apply {
                 onScreenUpdated()
 
-
                 if (Settings.terminal_theme == "Default") {
-
-
-
-                    if (Settings.terminal_theme == "Default") {
-
-
-
-
-                        mEmulator?.mColors?.mCurrentColors?.apply {
-
-
-
-
-                            set(256, getViewColor())
-
-
-
-
-                            set(258, getViewColor())
-
-
-
-
-                        }
-
-
-
-
-                    } else {
-
-
-
-
-                        mEmulator?.mColors?.reset()
-
-
-
-
+                    mEmulator?.mColors?.mCurrentColors?.apply {
+                        set(256, getViewColor())
+                        set(258, getViewColor())
                     }
-
-
-
                 } else {
-
-
-
                     mEmulator?.mColors?.reset()
-
-
-
                 }
             }
         }
@@ -305,12 +258,17 @@ fun TerminalScreen(
                         return newString
                     }
 
-                    val sessionId = generateUniqueString(mainActivityActivity.sessionBinder!!.getService().sessionList.keys.toList())
+                    val binder = mainActivityActivity.sessionBinder
+                    if (binder == null) {
+                        showAddDialog = false
+                        return@BasicAlertDialog
+                    }
+                    val sessionId = generateUniqueString(binder.getService().sessionList.keys.toList())
 
                     terminalView.get()
                         ?.let {
                             val client = TerminalBackEnd(it, mainActivityActivity)
-                            mainActivityActivity.sessionBinder!!.createSession(
+                            binder.createSession(
                                 sessionId,
                                 client,
                                 mainActivityActivity, workingMode = workingMode
@@ -418,7 +376,6 @@ fun TerminalScreen(
 
                                                 IconButton(
                                                     onClick = {
-                                                        println(session_id)
                                                         mainActivityActivity.sessionBinder?.terminateSession(
                                                             session_id
                                                         )
@@ -519,25 +476,32 @@ fun TerminalScreen(
                                             )
                                             val client = TerminalBackEnd(this, mainActivityActivity)
 
+                                            // Bail out cleanly if the service is not bound yet
+                                            // (e.g. user dismissed the activity very quickly).
+                                            val binder = mainActivityActivity.sessionBinder
+                                            if (binder == null) {
+                                                return@apply
+                                            }
+                                            val service = binder.getService()
+
                                             val session = if (pendingCommand != null) {
-                                                mainActivityActivity.sessionBinder!!.getService().currentSession.value = Pair(
-                                                    pendingCommand!!.id, pendingCommand!!.workingMode)
-                                                mainActivityActivity.sessionBinder!!.getSession(
-                                                    pendingCommand!!.id
-                                                )
-                                                    ?: mainActivityActivity.sessionBinder!!.createSession(
-                                                        pendingCommand!!.id,
+                                                val cmd = pendingCommand!!
+                                                service.currentSession.value = Pair(cmd.id, cmd.workingMode)
+                                                service.getSession(cmd.id)
+                                                    ?: binder.createSession(
+                                                        cmd.id,
                                                         client,
-                                                        mainActivityActivity, workingMode = Settings.working_Mode
+                                                        mainActivityActivity,
+                                                        workingMode = Settings.working_Mode,
                                                     )
                                             } else {
-                                                mainActivityActivity.sessionBinder!!.getSession(
-                                                    mainActivityActivity.sessionBinder!!.getService().currentSession.value.first
-                                                )
-                                                    ?: mainActivityActivity.sessionBinder!!.createSession(
-                                                        mainActivityActivity.sessionBinder!!.getService().currentSession.value.first,
+                                                val currentId = service.currentSession.value.first
+                                                service.getSession(currentId)
+                                                    ?: binder.createSession(
+                                                        currentId,
                                                         client,
-                                                        mainActivityActivity,workingMode = Settings.working_Mode
+                                                        mainActivityActivity,
+                                                        workingMode = Settings.working_Mode,
                                                     )
                                             }
 
@@ -554,45 +518,12 @@ fun TerminalScreen(
                                                 isFocusableInTouchMode = true
 
                                                 if (Settings.terminal_theme == "Default") {
-
-
-                                                    if (Settings.terminal_theme == "Default") {
-
-
-
-                                                        mEmulator?.mColors?.mCurrentColors?.apply {
-
-
-
-                                                            set(256, color)
-
-
-
-                                                            set(258, color)
-
-
-
-                                                        }
-
-
-
-                                                    } else {
-
-
-
-                                                        mEmulator?.mColors?.reset()
-
-
-
+                                                    mEmulator?.mColors?.mCurrentColors?.apply {
+                                                        set(256, color)
+                                                        set(258, color)
                                                     }
-
-
                                                 } else {
-
-
                                                     mEmulator?.mColors?.reset()
-
-
                                                 }
 
                                                 val colorsFile = localDir().child("colors.properties")
@@ -611,48 +542,15 @@ fun TerminalScreen(
                                         .weight(1f),
                                     update = { terminalView ->
                                         terminalView.onScreenUpdated()
-                                       val color = getViewColor()
+                                        val color = getViewColor()
 
                                         if (Settings.terminal_theme == "Default") {
-
-
-                                            if (Settings.terminal_theme == "Default") {
-
-
-
-                                                terminalView.mEmulator?.mColors?.mCurrentColors?.apply {
-
-
-
-                                                    set(256, color)
-
-
-
-                                                    set(258, color)
-
-
-
-                                                }
-
-
-
-                                            } else {
-
-
-
-                                                terminalView.mEmulator?.mColors?.reset()
-
-
-
+                                            terminalView.mEmulator?.mColors?.mCurrentColors?.apply {
+                                                set(256, color)
+                                                set(258, color)
                                             }
-
-
                                         } else {
-
-
                                             terminalView.mEmulator?.mColors?.reset()
-
-
                                         }
                                     },
                                 )
@@ -843,43 +741,43 @@ fun SelectableCard(
 
 
 fun changeSession(mainActivityActivity: MainActivity, session_id: String) {
+    val binder = mainActivityActivity.sessionBinder ?: return
+    val service = binder.getService()
     terminalView.get()?.apply {
         val client = TerminalBackEnd(this, mainActivityActivity)
-        val session =
-            mainActivityActivity.sessionBinder!!.getSession(session_id)
-                ?: mainActivityActivity.sessionBinder!!.createSession(
-                    session_id,
-                    client,
-                    mainActivityActivity,workingMode = Settings.working_Mode
-                )
+        val session = service.getSession(session_id)
+            ?: binder.createSession(
+                session_id,
+                client,
+                mainActivityActivity,
+                workingMode = Settings.working_Mode,
+            )
         session.updateTerminalSessionClient(client)
         attachSession(session)
         setTerminalViewClient(client)
         post {
-            val typedValue = TypedValue()
-
-            context.theme.resolveAttribute(
-                R.attr.colorOnSurface,
-                typedValue,
-                true
-            )
             keepScreenOn = true
             requestFocus()
             isFocusableInTouchMode = true
 
-            mEmulator?.mColors?.mCurrentColors?.apply {
-                set(256, typedValue.data)
-                set(258, typedValue.data)
+            // Respect the active terminal theme — only force foreground/cursor
+            // colors for the Default theme; for named themes let the theme's
+            // own colors take over via mColors.reset().
+            if (Settings.terminal_theme == "Default") {
+                mEmulator?.mColors?.mCurrentColors?.apply {
+                    set(256, getViewColor())
+                    set(258, getViewColor())
+                }
+            } else {
+                mEmulator?.mColors?.reset()
             }
         }
         virtualKeysView.get()?.apply {
             virtualKeysViewClient =
                 terminalView.get()?.mTermSession?.let { VirtualKeysListener(it) }
         }
-
     }
-    mainActivityActivity.sessionBinder!!.getService().currentSession.value = Pair(session_id,mainActivityActivity.sessionBinder!!.getService().sessionList[session_id]!!)
-
+    service.currentSession.value = Pair(session_id, service.sessionList[session_id]!!)
 }
 
 

@@ -8,7 +8,12 @@ fi
 
 [ ! -e "$PREFIX/local/bin/proot" ] && cp "$PREFIX/files/proot" "$PREFIX/local/bin"
 
+# Copy any pre-bundled shared libraries (libtalloc.so.2 etc.) into the local lib dir.
+# We use a for loop with an explicit existence check so that if the glob does not
+# match anything (e.g. only libtalloc.so.2 is present), we don't try to copy the
+# literal string "$PREFIX/files/*.so.2" as a file.
 for sofile in "$PREFIX/files/"*.so.2; do
+    [ -e "$sofile" ] || continue
     dest="$PREFIX/local/lib/$(basename "$sofile")"
     [ ! -e "$dest" ] && cp "$sofile" "$dest"
 done

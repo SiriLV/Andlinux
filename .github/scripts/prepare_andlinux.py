@@ -5,42 +5,52 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def patch(path, pairs):
+    """Idempotent text patcher. Only replaces if `old` exists in source.
+    Returns True if any change was made."""
     p = ROOT / path
     if not p.exists():
-        return
+        return False
     text = p.read_text()
     changed = False
     for old, new in pairs:
-        if old in text:
+        if old and old in text:
             text = text.replace(old, new)
             changed = True
     if changed:
         p.write_text(text)
+    return changed
 
 
-# AndLinux branding patches. These are idempotent: if the source is already
-# branded as AndLinux (which is the case in this repository), these are no-ops.
-# They remain in place so that re-syncing from an upstream that still uses the
-# old name will be auto-rebranded at build time.
+# ===== Branding patches (idempotent — no-op if already applied) =====
 patch('settings.gradle.kts', [('rootProject.name = "ReTerminal"', 'rootProject.name = "AndLinux"')])
-patch('core/main/src/main/java/com/rk/terminal/ui/screens/terminal/TerminalScreen.kt', [('Text(text = "ReTerminal"', 'Text(text = "AndLinux"')])
-patch('core/main/src/main/java/com/rk/AlpineDocumentProvider.kt', [('val applicationName = "ReTerminal"', 'val applicationName = "AndLinux"'), ('Log.w("Alpine",', 'Log.w("AndLinux",')])
-patch('core/main/src/main/java/com/rk/terminal/service/SessionService.kt', [('.setContentTitle("ReTerminal")', '.setContentTitle("AndLinux")')])
-patch('core/resources/src/main/res/values/strings.xml', [('ReTerminal Android shell', 'AndLinux Android shell')])
-patch('core/resources/src/main/res/values-zh/strings.xml', [('ReTerminal Android Shell', 'AndLinux Android Shell')])
-patch('core/main/src/main/java/com/rk/terminal/ui/screens/terminal/TerminalBackEnd.kt', [('original ReTerminal keyboard', 'original AndLinux keyboard')])
-patch('core/main/src/main/java/com/rk/terminal/ui/screens/terminal/Rootfs.kt', [('val reTerminal = application', 'val andLinux = application')])
-patch('core/main/src/main/java/com/rk/terminal/ui/screens/downloader/Downloader.kt', [('Rootfs.reTerminal', 'Rootfs.andLinux')])
+patch('core/main/src/main/java/com/rk/terminal/ui/screens/terminal/TerminalScreen.kt',
+      [('Text(text = "ReTerminal"', 'Text(text = "AndLinux"')])
+patch('core/main/src/main/java/com/rk/AlpineDocumentProvider.kt',
+      [('val applicationName = "ReTerminal"', 'val applicationName = "AndLinux"'),
+       ('Log.w("Alpine",', 'Log.w("AndLinux",')])
+patch('core/main/src/main/java/com/rk/terminal/service/SessionService.kt',
+      [('.setContentTitle("ReTerminal")', '.setContentTitle("AndLinux")')])
+patch('core/resources/src/main/res/values/strings.xml',
+      [('ReTerminal Android shell', 'AndLinux Android shell')])
+patch('core/resources/src/main/res/values-zh/strings.xml',
+      [('ReTerminal Android Shell', 'AndLinux Android Shell')])
+patch('core/main/src/main/java/com/rk/terminal/ui/screens/terminal/TerminalBackEnd.kt',
+      [('original ReTerminal keyboard', 'original AndLinux keyboard')])
+patch('core/main/src/main/java/com/rk/terminal/ui/screens/terminal/Rootfs.kt',
+      [('val reTerminal = application', 'val andLinux = application')])
+patch('core/main/src/main/java/com/rk/terminal/ui/screens/downloader/Downloader.kt',
+      [('Rootfs.reTerminal', 'Rootfs.andLinux')])
 
+# ===== Settings.terminal_theme property (idempotent) =====
 settings = ROOT / 'core/main/src/main/java/com/rk/settings/Settings.kt'
 text = settings.read_text()
-needle = '''    var default_shell
+if 'var terminal_theme' not in text:
+    needle = '''    var default_shell
         get() = Preference.getString(key = "default_shell", default = "ash")
         set(value) = Preference.setString(key = "default_shell", value)
 
     var custom_background_name'''
-if needle in text and 'var terminal_theme' not in text:
-    text = text.replace(needle, '''    var default_shell
+    replacement = '''    var default_shell
         get() = Preference.getString(key = "default_shell", default = "ash")
         set(value) = Preference.setString(key = "default_shell", value)
 
@@ -48,9 +58,12 @@ if needle in text and 'var terminal_theme' not in text:
         get() = Preference.getString(key = "terminal_theme", default = "Default")
         set(value) = Preference.setString(key = "terminal_theme", value)
 
-    var custom_background_name''')
-settings.write_text(text)
+    var custom_background_name'''
+    if needle in text:
+        text = text.replace(needle, replacement)
+        settings.write_text(text)
 
+# ===== TerminalScreen.kt: load colors.properties on launch (idempotent) =====
 terminal = ROOT / 'core/main/src/main/java/com/rk/terminal/ui/screens/terminal/TerminalScreen.kt'
 text = terminal.read_text()
 if 'val savedColorsFile = localDir().child("colors.properties")' not in text:
@@ -71,54 +84,44 @@ if 'val savedColorsFile = localDir().child("colors.properties")' not in text:
     )
 
 # Terminal text/cursor color must not be forced to white/black when a real terminal theme is selected.
-text = text.replace(
-    'darkText.value = !isDarkMode',
-    'darkText.value = if (Settings.terminal_theme == "Default") !isDarkMode else Settings.blackTextColor'
-)
+if 'darkText.value = if (Settings.terminal_theme == "Default") !isDarkMode else Settings.blackTextColor' not in text:
+    text = text.replace(
+        'darkText.value = !isDarkMode',
+        'darkText.value = if (Settings.terminal_theme == "Default") !isDarkMode else Settings.blackTextColor'
+    )
 
-# Patch terminalView.mEmulator first. The standalone mEmulator regex has a negative lookbehind so it
-# cannot accidentally turn terminalView.mEmulator into terminalView.if (...).
-text = re.sub(
-    r'(?P<indent>\s*)terminalView\.mEmulator\?\.mColors\?\.mCurrentColors\?\.apply \{\n\s*set\(256, color\)\n\s*set\(258, color\)\n\s*\}',
-    lambda m: f'{m.group("indent")}if (Settings.terminal_theme == "Default") {{\n'
-              f'{m.group("indent")}    terminalView.mEmulator?.mColors?.mCurrentColors?.apply {{\n'
-              f'{m.group("indent")}        set(256, color)\n'
-              f'{m.group("indent")}        set(258, color)\n'
-              f'{m.group("indent")}    }}\n'
-              f'{m.group("indent")}}} else {{\n'
-              f'{m.group("indent")}    terminalView.mEmulator?.mColors?.reset()\n'
-              f'{m.group("indent")}}}',
-    text
-)
+# Wrap the existing mEmulator color set blocks with a Default-theme guard.
+# Idempotent: only apply if the block is NOT already wrapped in `if (Settings.terminal_theme == "Default")`.
+def wrap_color_block(text, pattern):
+    def replacer(m):
+        indent = m.group('indent')
+        body = m.group(0)
+        # Check if already wrapped
+        preceding = text[:m.start()].rstrip()
+        if preceding.endswith('if (Settings.terminal_theme == "Default") {'):
+            return body  # already wrapped, leave alone
+        return (f'{indent}if (Settings.terminal_theme == "Default") {{\n'
+                f'{body}\n'
+                f'{indent}}} else {{\n'
+                f'{indent}    mEmulator?.mColors?.reset()\n'
+                f'{indent}}}')
+    return re.sub(pattern, replacer, text)
 
-text = re.sub(
-    r'(?P<indent>\s*)(?<!\.)mEmulator\?\.mColors\?\.mCurrentColors\?\.apply \{\n\s*set\(256, getViewColor\(\)\)\n\s*set\(258, getViewColor\(\)\)\n\s*\}',
-    lambda m: f'{m.group("indent")}if (Settings.terminal_theme == "Default") {{\n'
-              f'{m.group("indent")}    mEmulator?.mColors?.mCurrentColors?.apply {{\n'
-              f'{m.group("indent")}        set(256, getViewColor())\n'
-              f'{m.group("indent")}        set(258, getViewColor())\n'
-              f'{m.group("indent")}    }}\n'
-              f'{m.group("indent")}}} else {{\n'
-              f'{m.group("indent")}    mEmulator?.mColors?.reset()\n'
-              f'{m.group("indent")}}}',
-    text
+text = wrap_color_block(
+    text,
+    r'(?P<indent>\s*)terminalView\.mEmulator\?\.mColors\?\.mCurrentColors\?\.apply \{\n\s*set\(256, color\)\n\s*set\(258, color\)\n\s*\}'
 )
-
-text = re.sub(
-    r'(?P<indent>\s*)(?<!\.)mEmulator\?\.mColors\?\.mCurrentColors\?\.apply \{\n\s*set\(256, color\)\n\s*set\(258, color\)\n\s*\}',
-    lambda m: f'{m.group("indent")}if (Settings.terminal_theme == "Default") {{\n'
-              f'{m.group("indent")}    mEmulator?.mColors?.mCurrentColors?.apply {{\n'
-              f'{m.group("indent")}        set(256, color)\n'
-              f'{m.group("indent")}        set(258, color)\n'
-              f'{m.group("indent")}    }}\n'
-              f'{m.group("indent")}}} else {{\n'
-              f'{m.group("indent")}    mEmulator?.mColors?.reset()\n'
-              f'{m.group("indent")}}}',
-    text
+text = wrap_color_block(
+    text,
+    r'(?P<indent>\s*)(?<!\.)mEmulator\?\.mColors\?\.mCurrentColors\?\.apply \{\n\s*set\(256, getViewColor\(\)\)\n\s*set\(258, getViewColor\(\)\)\n\s*\}'
 )
-
+text = wrap_color_block(
+    text,
+    r'(?P<indent>\s*)(?<!\.)mEmulator\?\.mColors\?\.mCurrentColors\?\.apply \{\n\s*set\(256, color\)\n\s*set\(258, color\)\n\s*\}'
+)
 terminal.write_text(text)
 
+# ===== Customization.kt: add Color Scheme group + imports (idempotent) =====
 cust = ROOT / 'core/main/src/main/java/com/rk/terminal/ui/screens/customization/Customization.kt'
 text = cust.read_text()
 if 'import androidx.compose.material3.RadioButton' not in text:

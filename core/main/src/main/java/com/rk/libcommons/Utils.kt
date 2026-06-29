@@ -2,6 +2,7 @@ package com.rk.libcommons
 
 import android.content.Context
 import android.content.res.Configuration
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.StringRes
@@ -117,5 +118,7 @@ inline fun dpToPx(dp: Float, ctx: Context): Int {
 }
 
 inline fun isMainThread(): Boolean {
-    return Thread.currentThread().name == "main"
+    // Use the official API rather than string-matching on the thread name,
+    // which is fragile (worker threads can be named "main" by accident).
+    return Looper.myLooper() === Looper.getMainLooper()
 }

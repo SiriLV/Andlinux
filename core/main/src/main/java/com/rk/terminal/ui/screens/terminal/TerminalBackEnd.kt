@@ -166,11 +166,16 @@ class TerminalBackEnd(val terminal: TerminalView,val activity: MainActivity) : T
             return true
         }
         if (keyCode == KeyEvent.KEYCODE_ENTER && !session.isRunning) {
-            activity.sessionBinder?.terminateSession(activity.sessionBinder!!.getService().currentSession.value.first)
-            if (activity.sessionBinder!!.getService().sessionList.isEmpty()){
+            // The session has finished; terminate it and either close the activity
+            // or switch to the next remaining session.
+            val binder = activity.sessionBinder ?: return false
+            val service = binder.getService()
+            val currentId = service.currentSession.value.first
+            binder.terminateSession(currentId)
+            if (service.sessionList.isEmpty()) {
                 activity.finish()
-            }else{
-                changeSession(activity,activity.sessionBinder!!.getService().sessionList.keys.first())
+            } else {
+                changeSession(activity, service.sessionList.keys.first())
             }
             return true
         }

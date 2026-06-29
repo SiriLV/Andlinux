@@ -135,8 +135,15 @@ class AlpineDocumentProvider : DocumentsProvider() {
     @Throws(FileNotFoundException::class)
     override fun deleteDocument(documentId: String) {
         val file = getFileForDocId(documentId)
+        // File.delete() returns false for non-empty directories — fall back to
+        // recursive delete in that case so the user's "delete folder" action
+        // actually works instead of throwing FileNotFoundException.
         if (!file.delete()) {
-            throw FileNotFoundException("Failed to delete document with id $documentId")
+            if (file.isDirectory) {
+                file.deleteRecursively()
+            } else {
+                throw FileNotFoundException("Failed to delete document with id $documentId")
+            }
         }
     }
 
@@ -191,8 +198,15 @@ class AlpineDocumentProvider : DocumentsProvider() {
     }
 
     override fun isChildDocument(parentDocumentId: String, documentId: String): Boolean {
-        return documentId.startsWith(parentDocumentId)
+        // Path-prefix check must use the file separator so that "/root" is not
+        // considered a child of "/roo". Compare canonical paths to be safe.
+        val sep = File.separator
+        return documentId == parentDocumentId ||
+            documentId.startsWith(parentDocumentId.ensureTrailingSep(sep))
     }
+
+    private fun String.ensureTrailingSep(sep: String): String =
+        if (endsWith(sep)) this else this + sep
 
     /**
      * Add a representation of a file to a cursor.

@@ -114,6 +114,10 @@ private suspend fun setupEnvironment(
     onError: (Exception) -> Unit
 ) {
     withContext(Dispatchers.IO) {
+        // Track which files we actually attempted to download in this run
+        // so that on failure we only wipe those (not files that were already
+        // present before the call, which the user might not want deleted).
+        val attemptedThisRun = mutableSetOf<File>()
         try {
             var completedFiles = 0
             val totalFiles = filesToDownload.size
@@ -121,6 +125,7 @@ private suspend fun setupEnvironment(
             filesToDownload.forEach { file ->
                 val outputFile = file.outputFile.apply { parentFile?.mkdirs() }
                 if (!outputFile.exists()) {
+                    attemptedThisRun.add(outputFile)
                     downloadFile(file.url, outputFile) { downloaded, total ->
                         runOnUiThread {
                             onProgress(
@@ -137,8 +142,9 @@ private suspend fun setupEnvironment(
             }
             runOnUiThread { onComplete() }
         } catch (e: Exception) {
-            // Wipe any half-written downloads so the next attempt starts clean.
-            filesToDownload.forEach { it.outputFile.takeIf { f -> f.exists() }?.delete() }
+            // Only wipe files that we started downloading in THIS run — don't
+            // touch files that already existed before setupEnvironment was called.
+            attemptedThisRun.forEach { it.takeIf { f -> f.exists() }?.delete() }
             withContext(Dispatchers.Main) { onError(e) }
         }
     }

@@ -1,5 +1,7 @@
 #!/bin/sh
-set -e
+# Note: do NOT use `set -e` here. Several operations below (apk update, apk add,
+# identity file checks) are allowed to fail without killing the terminal —
+# e.g. when the device has no network. We handle each failure explicitly.
 
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/share/bin:/usr/share/sbin:/usr/local/bin:/usr/local/sbin:/system/bin:/system/xbin
 export HOME=/root
@@ -198,10 +200,18 @@ install_packages() {
 
     if [ -n "$missing" ]; then
         echo -e "\e[34;1m[*]\e[0m Installing packages:$missing"
-        apk update
-        apk add $missing
-        echo -e "\e[32;1m[+]\e[0m Packages installed"
+        # apk update may fail (no network). Don't let that kill the script —
+        # just try to install the packages directly; if that also fails we
+        # print a clear error and continue so the user still gets a shell.
+        apk update 2>&1 || echo -e "\e[33;1m[!]\e[0m apk update failed (no network?), continuing"
+        if apk add $missing 2>&1; then
+            echo -e "\e[32;1m[+]\e[0m Packages installed"
+        else
+            echo -e "\e[33;1m[!]\e[0m Failed to install:$missing — continuing without them"
+            return 1
+        fi
     fi
+    return 0
 }
 
 # Base compatibility packages. Keep this list small; optional shells are installed only when selected.

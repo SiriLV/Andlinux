@@ -2,7 +2,6 @@ package com.rk.terminal.ui.screens.terminal
 
 import com.rk.libcommons.alpineHomeDir
 import com.rk.libcommons.child
-import com.rk.libcommons.createFileIfNot
 import com.rk.libcommons.localBinDir
 import com.rk.libcommons.localLibDir
 import com.rk.libcommons.pendingCommand
@@ -21,6 +20,9 @@ object MkSession {
         activity: MainActivity, sessionClient: TerminalSessionClient, session_id: String,workingMode:Int
     ): TerminalSession {
         with(activity) {
+            // Only forward non-null Android system env vars. Forwarding null
+            // would put literal "KEY=null" entries into the child env, which
+            // can confuse shell scripts that source these variables.
             val envVariables = mapOf(
                 "ANDROID_ART_ROOT" to System.getenv("ANDROID_ART_ROOT"),
                 "ANDROID_DATA" to System.getenv("ANDROID_DATA"),
@@ -31,24 +33,15 @@ object MkSession {
                 "BOOTCLASSPATH" to System.getenv("BOOTCLASSPATH"),
                 "DEX2OATBOOTCLASSPATH" to System.getenv("DEX2OATBOOTCLASSPATH"),
                 "EXTERNAL_STORAGE" to System.getenv("EXTERNAL_STORAGE")
-            )
+            ).filterValues { it != null }
 
             val workingDir = pendingCommand?.workingDir ?: alpineHomeDir().path
 
-            val initFile: File = localBinDir().child("init-host")
-
-            initFile.createFileIfNot()
-            initFile.writeText(assets.open("init-host.sh").bufferedReader().use { it.readText() })
-
-
-            localBinDir().child("init").apply {
-                createFileIfNot()
-                writeText(assets.open("init.sh").bufferedReader().use { it.readText() })
-            }
-
+            // init-host and init are written by UpdateManager.onUpdate() on every
+            // app start; we don't need to rewrite them here per-session.
 
             val env = mutableListOf(
-                "PATH=${System.getenv("PATH")}:/sbin:${localBinDir().absolutePath}",
+                "PATH=${System.getenv("PATH") ?: "/system/bin"}:/sbin:${localBinDir().absolutePath}",
                 "HOME=/sdcard",
                 "PUBLIC_HOME=${getExternalFilesDir(null)?.absolutePath}",
                 "COLORTERM=truecolor",
@@ -81,9 +74,6 @@ object MkSession {
                 env.add("SECCOMP=1")
             }
 
-
-
-
             env.addAll(envVariables.map { "${it.key}=${it.value}" })
 
             pendingCommand?.env?.let {
@@ -94,7 +84,7 @@ object MkSession {
 
             val shell = if (pendingCommand == null) {
                 args = if (workingMode == WorkingMode.ALPINE){
-                    arrayOf("-c",initFile.absolutePath)
+                    arrayOf("-c", localBinDir().child("init-host").absolutePath)
                 }else{
                     arrayOf()
                 }

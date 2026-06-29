@@ -3,7 +3,9 @@ package com.rk.terminal
 import android.app.Application
 import android.os.Build
 import android.os.StrictMode
+import android.util.Log
 import com.github.anrwatchdog.ANRWatchDog
+import com.rk.crashhandler.CrashHandler
 import com.rk.libcommons.application
 import com.rk.resources.Res
 import com.rk.update.UpdateManager
@@ -19,6 +21,8 @@ class App : Application() {
 
     @OptIn(DelicateCoroutinesApi::class)
     companion object {
+        private const val TAG = "AndLinuxApp"
+
         fun getTempDir(): File {
             val tmp = File(application!!.filesDir.parentFile, "tmp")
             if (!tmp.exists()) {
@@ -34,38 +38,36 @@ class App : Application() {
         application = this
         Res.application = this
 
+        // Install the global crash handler so unexpected exceptions get logged to
+        // filesDir/crash.log instead of silently killing the process.
+        Thread.setDefaultUncaughtExceptionHandler(CrashHandler)
+
         GlobalScope.launch(Dispatchers.IO) {
             getTempDir().apply {
-                if (exists() && listFiles().isNullOrEmpty().not()){ deleteRecursively() }
+                if (exists() && listFiles().isNullOrEmpty().not()) { deleteRecursively() }
             }
         }
 
-        //Thread.setDefaultUncaughtExceptionHandler(CrashHandler)
         ANRWatchDog().start()
 
         UpdateManager().onUpdate()
 
-        if (BuildConfig.DEBUG){
+        if (BuildConfig.DEBUG) {
             StrictMode.setVmPolicy(
                 StrictMode.VmPolicy.Builder().apply {
                     detectAll()
                     penaltyLog()
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P){
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        // Use a single-thread executor to log violations. We deliberately
+                        // do NOT rethrow — doing so killed the listener thread and stopped
+                        // further violation reporting.
                         penaltyListener(Executors.newSingleThreadExecutor()) { violation ->
-                            println(violation.message)
-                            violation.printStackTrace()
-                            violation.cause?.let { throw it }
-                            println("vm policy error")
+                            Log.w(TAG, "StrictMode VM violation: ${violation.message}", violation)
                         }
                     }
                 }.build()
             )
         }
-
-
-
-
-
     }
 
     override fun onTrimMemory(level: Int) {
