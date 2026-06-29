@@ -259,24 +259,23 @@ fun TerminalScreen(
                     }
 
                     val binder = mainActivityActivity.sessionBinder
-                    if (binder == null) {
-                        showAddDialog = false
-                        return@BasicAlertDialog
+                    if (binder != null) {
+                        val sessionId = generateUniqueString(binder.getService().sessionList.keys.toList())
+
+                        terminalView.get()
+                            ?.let {
+                                val client = TerminalBackEnd(it, mainActivityActivity)
+                                binder.createSession(
+                                    sessionId,
+                                    client,
+                                    mainActivityActivity, workingMode = workingMode
+                                )
+                            }
+
+
+                        changeSession(mainActivityActivity, session_id = sessionId)
                     }
-                    val sessionId = generateUniqueString(binder.getService().sessionList.keys.toList())
-
-                    terminalView.get()
-                        ?.let {
-                            val client = TerminalBackEnd(it, mainActivityActivity)
-                            binder.createSession(
-                                sessionId,
-                                client,
-                                mainActivityActivity, workingMode = workingMode
-                            )
-                        }
-
-
-                    changeSession(mainActivityActivity, session_id = sessionId)
+                    showAddDialog = false
                 }
 
 
@@ -487,7 +486,7 @@ fun TerminalScreen(
                                             val session = if (pendingCommand != null) {
                                                 val cmd = pendingCommand!!
                                                 service.currentSession.value = Pair(cmd.id, cmd.workingMode)
-                                                service.getSession(cmd.id)
+                                                binder.getSession(cmd.id)
                                                     ?: binder.createSession(
                                                         cmd.id,
                                                         client,
@@ -496,7 +495,7 @@ fun TerminalScreen(
                                                     )
                                             } else {
                                                 val currentId = service.currentSession.value.first
-                                                service.getSession(currentId)
+                                                binder.getSession(currentId)
                                                     ?: binder.createSession(
                                                         currentId,
                                                         client,
@@ -745,7 +744,7 @@ fun changeSession(mainActivityActivity: MainActivity, session_id: String) {
     val service = binder.getService()
     terminalView.get()?.apply {
         val client = TerminalBackEnd(this, mainActivityActivity)
-        val session = service.getSession(session_id)
+        val session = binder.getSession(session_id)
             ?: binder.createSession(
                 session_id,
                 client,
