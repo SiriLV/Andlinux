@@ -43,6 +43,7 @@ fun Downloader(
     navController: NavHostController
 ) {
     val installingStr = stringResource(strings.installing)
+    val downloadingStr = stringResource(strings.downloading)
     val networkErrorStr = stringResource(strings.network_error)
     val setupFailedStr = stringResource(strings.setup_failed)
     var progress by remember { mutableFloatStateOf(0f) }
@@ -73,7 +74,8 @@ fun Downloader(
                 onProgress = { completed, total, currentProgress ->
                     if (needsDownload) {
                         progress = ((completed + currentProgress) / total).coerceIn(0f, 1f)
-                        progressText = "Downloading.. ${(progress * 100).toInt()}%"
+                        val pct = (progress * 100).toInt()
+                        progressText = downloadingStr.format(pct)
                     }
                 },
                 onComplete = {

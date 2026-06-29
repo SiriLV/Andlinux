@@ -215,7 +215,7 @@ if [ ! -f /linkerconfig/ld.config.txt ]; then
 fi
 
 select_shell() {
-    case "${RET_DEFAULT_SHELL:-ash}" in
+    case "${ANDLINUX_DEFAULT_SHELL:-ash}" in
         ash|sh)
             SELECTED_SHELL=/bin/ash
             SELECTED_PKG=""
@@ -233,7 +233,7 @@ select_shell() {
             SELECTED_PKG=zsh
             ;;
         *)
-            echo "Unknown shell '${RET_DEFAULT_SHELL}', falling back to ash"
+            echo "Unknown shell '${ANDLINUX_DEFAULT_SHELL}', falling back to ash"
             SELECTED_SHELL=/bin/ash
             SELECTED_PKG=""
             ;;

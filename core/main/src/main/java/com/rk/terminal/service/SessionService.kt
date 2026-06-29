@@ -7,7 +7,6 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.NotificationCompat
@@ -48,13 +47,14 @@ class SessionService : Service() {
         }
         fun terminateSession(id: String) {
             runCatching {
-                //crash is here
-                sessions[id]?.apply {
-                    if (emulator != null){
-                        sessions[id]?.finishIfRunning()
-                    }
+                // Calling finishIfRunning() on a session whose emulator has not
+                // yet been attached historically crashed here. Guard against
+                // null emulator and swallow any remaining exception so that
+                // closing one session can never take down the whole service.
+                sessions[id]?.let { session ->
+                    runCatching { session.finishIfRunning() }
+                        .onFailure { it.printStackTrace() }
                 }
-
                 sessions.remove(id)
                 sessionList.remove(id)
                 if (sessions.isEmpty()) {
@@ -63,7 +63,6 @@ class SessionService : Service() {
                     updateNotification()
                 }
             }.onFailure { it.printStackTrace() }
-
         }
     }
 
@@ -126,7 +125,7 @@ class SessionService : Service() {
             .addAction(
                 NotificationCompat.Action.Builder(
                     null,
-                    "EXIT",
+                    getString(strings.exit_action),
                     exitPendingIntent
                 ).build()
             )
@@ -155,9 +154,10 @@ class SessionService : Service() {
 
     private fun getNotificationContentText(): String {
         val count = sessions.size
-        if (count == 1){
-            return "1 session running"
+        return if (count == 1) {
+            getString(strings.session_running_one)
+        } else {
+            getString(strings.session_running_many, count)
         }
-        return "$count sessions running"
     }
 }

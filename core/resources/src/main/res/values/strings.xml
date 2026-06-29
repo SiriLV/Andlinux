@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings">Settings</string>
-    <string name="use_shizuku">Auto Login to shizuku</string>
-    <string name="use_shizuku_desc">Automatically execute rish command</string>
     <string name="default_working_mode">Default Working mode</string>
     <string name="alpine_desc">Alpine Linux</string>
     <string name="android_desc">AndLinux Android shell</string>
@@ -39,6 +37,9 @@
     <string name="session">Session</string>
     <string name="apply">Apply</string>
     <string name="cancel">Cancel</string>
+    <string name="exit_action">EXIT</string>
+    <string name="session_running_one">1 session running</string>
+    <string name="session_running_many">%1$d sessions running</string>
     <string name="installing">Installing</string>
     <string name="downloading">Downloading.. %1$d%%</string>
     <string name="network_error">Network Error</string>
@@ -58,12 +59,4 @@
     <string name="shortcut_capture_title">Press a key combination</string>
     <string name="shortcut_capture_hint">Waiting for input…</string>
     <string name="shortcut_clear">Clear</string>
-    <string name="input_mode">Input Mode</string>
-    <string name="input_mode_desc">Configure how the terminal communicates with input methods</string>
-    <string name="input_mode_default">Default (Recommended)</string>
-    <string name="input_mode_default_desc">Compatible with all IMEs including CJK input</string>
-    <string name="input_mode_type_null">Strict Terminal</string>
-    <string name="input_mode_type_null_desc">Semantically correct but may break some IMEs</string>
-    <string name="input_mode_visible_password">Legacy Workaround</string>
-    <string name="input_mode_visible_password_desc">Fixes Samsung keyboard echo; may break Gboard CJK input</string>
 </resources>

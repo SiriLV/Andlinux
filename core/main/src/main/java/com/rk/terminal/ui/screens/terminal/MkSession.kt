@@ -1,17 +1,12 @@
 package com.rk.terminal.ui.screens.terminal
 
-import android.os.Environment
-import com.rk.libcommons.alpineDir
 import com.rk.libcommons.alpineHomeDir
-import com.rk.libcommons.application
 import com.rk.libcommons.child
 import com.rk.libcommons.createFileIfNot
 import com.rk.libcommons.localBinDir
-import com.rk.libcommons.localDir
 import com.rk.libcommons.localLibDir
 import com.rk.libcommons.pendingCommand
 import com.rk.settings.Settings
-import com.rk.terminal.App
 import com.rk.terminal.App.Companion.getTempDir
 import com.rk.terminal.BuildConfig
 import com.rk.terminal.ui.activities.terminal.MainActivity
@@ -20,7 +15,6 @@ import com.termux.terminal.TerminalEmulator
 import com.termux.terminal.TerminalSession
 import com.termux.terminal.TerminalSessionClient
 import java.io.File
-import java.io.FileOutputStream
 
 object MkSession {
     fun createSession(
@@ -71,7 +65,7 @@ object MkSession {
                 "PKG_PATH=${applicationInfo.sourceDir}",
                 "PROOT_TMP_DIR=${getTempDir().child(session_id).also { if (it.exists().not()){it.mkdirs()} }}",
                 "TMPDIR=${getTempDir().absolutePath}",
-                "RET_DEFAULT_SHELL=${Settings.default_shell}",
+                "ANDLINUX_DEFAULT_SHELL=${Settings.default_shell}",
                 "SHELL=/bin/${Settings.default_shell}"
             )
 

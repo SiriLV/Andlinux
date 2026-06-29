@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings">设置</string>
-    <string name="use_shizuku">自动登录 Shizuku</string>
-    <string name="use_shizuku_desc">自动执行 rish 命令</string>
     <string name="default_working_mode">默认工作模式</string>
     <string name="alpine_desc">Alpine Linux</string>
     <string name="android_desc">AndLinux Android Shell</string>
@@ -39,6 +37,9 @@
     <string name="session">会话</string>
     <string name="apply">应用</string>
     <string name="cancel">取消</string>
+    <string name="exit_action">退出</string>
+    <string name="session_running_one">1 个会话正在运行</string>
+    <string name="session_running_many">%1$d 个会话正在运行</string>
     <string name="installing">安装中</string>
     <string name="downloading">下载中.. %1$d%%</string>
     <string name="network_error">网络错误</string>
@@ -58,12 +59,4 @@
     <string name="shortcut_capture_title">请按下快捷键组合</string>
     <string name="shortcut_capture_hint">等待输入…</string>
     <string name="shortcut_clear">清除</string>
-    <string name="input_mode">输入模式</string>
-    <string name="input_mode_desc">配置终端与输入法的通信方式</string>
-    <string name="input_mode_default">默认（推荐）</string>
-    <string name="input_mode_default_desc">兼容所有输入法，包括中日韩文输入</string>
-    <string name="input_mode_type_null">严格终端模式</string>
-    <string name="input_mode_type_null_desc">语义最正确，但可能导致部分输入法异常</string>
-    <string name="input_mode_visible_password">旧版兼容模式</string>
-    <string name="input_mode_visible_password_desc">修复三星键盘回显问题；可能导致 Gboard 中文输入失效</string>
 </resources>

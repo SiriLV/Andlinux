@@ -25,13 +25,6 @@ object Settings {
             default = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
         )
         set(value) = Preference.setBoolean(key = "monet",value)
-    var ignore_storage_permission
-        get() = Preference.getBoolean(key = "ignore_storage_permission",default = false)
-        set(value) = Preference.setBoolean(key = "ignore_storage_permission",value)
-    var github
-        get() = Preference.getBoolean(key = "github", default = true)
-        set(value) = Preference.setBoolean(key = "github",value)
-
 
    var default_night_mode
         get() = Preference.getInt(key = "default_night_mode", default = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)

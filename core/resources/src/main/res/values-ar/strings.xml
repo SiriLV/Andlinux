@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings">الإعدادات</string>
-    <string name="use_shizuku">تسجيل الدخول التلقائي إلى Shizuku</string>
-    <string name="use_shizuku_desc">تنفيذ أمر rish تلقائيًا</string>
+    <string name="exit_action">خروج</string>
+    <string name="session_running_one">جلسة واحدة قيد التشغيل</string>
+    <string name="session_running_many">%1$d جلسات قيد التشغيل</string>
     <string name="keyboard_shortcuts">اختصارات لوحة المفاتيح</string>
     <string name="keyboard_shortcuts_desc">تفعيل اختصارات لوحة المفاتيح</string>
     <string name="shortcut_paste">لصق</string>
@@ -18,12 +19,4 @@
     <string name="shortcut_capture_title">اضغط على مجموعة مفاتيح</string>
     <string name="shortcut_capture_hint">في انتظار الإدخال…</string>
     <string name="shortcut_clear">مسح</string>
-    <string name="input_mode">وضع الإدخال</string>
-    <string name="input_mode_desc">تكوين طريقة تواصل الطرفية مع أساليب الإدخال</string>
-    <string name="input_mode_default">افتراضي (موصى به)</string>
-    <string name="input_mode_default_desc">متوافق مع جميع أساليب الإدخال بما في ذلك CJK</string>
-    <string name="input_mode_type_null">وضع طرفية صارم</string>
-    <string name="input_mode_type_null_desc">صحيح دلاليًا ولكن قد يتعطل بعض أساليب الإدخال</string>
-    <string name="input_mode_visible_password">وضع التوافق القديم</string>
-    <string name="input_mode_visible_password_desc">يصلح مشكلة صدى لوحة مفاتيح سامسونج؛ قد يعطل إدخال CJK في Gboard</string>
 </resources>

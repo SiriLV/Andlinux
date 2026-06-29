@@ -5,24 +5,34 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import androidx.core.content.ContextCompat
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.rk.libcommons.TerminalCommand
 import com.rk.libcommons.application
 import com.rk.libcommons.pendingCommand
 import com.rk.libcommons.toast
-import com.rk.resources.getString
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+/**
+ * Termux RUN_COMMAND integration.
+ *
+ * Status: currently UNUSED inside AndLinux. The functions here are kept as a
+ * standalone helper module so that future code (e.g. a "Run in Termux" menu
+ * action) can call into a real Termux install via the RUN_COMMAND intent.
+ *
+ * If you do wire this up, make sure the user-facing UI checks
+ * `isTermuxInstalled()` and `isExecPermissionGranted()` first and shows a
+ * helpful error if either is false — otherwise `runCommandTermux` will
+ * silently toast and do nothing.
+ */
+@Suppress("unused")
 const val TERMUX_PKG = "com.termux"
 
 @SuppressLint("SdCardPath")
+@Suppress("unused")
 const val TERMUX_PREFIX = "/data/data/$TERMUX_PKG/files/usr"
 
 fun isTermuxInstalled(): Boolean {
@@ -52,13 +62,14 @@ fun isTermuxCompatible(): Boolean {
     return activities.isNotEmpty()
 }
 
+@Suppress("unused")
 fun testExecPermission(): Pair<Boolean, Exception?> {
-    try {
+    return try {
         checkTermuxInstall()
         runCommandTermux(application!!, "$TERMUX_PREFIX/bin/echo", arrayOf(), background = true, isTesting = true)
-        return Pair(true, null)
+        Pair(true, null)
     } catch (e: Exception) {
-        return Pair(false, e)
+        Pair(false, e)
     }
 }
 
@@ -69,7 +80,16 @@ fun isExecPermissionGranted(): Boolean {
     ) == PackageManager.PERMISSION_GRANTED
 }
 
+/**
+ * Send a RUN_COMMAND intent to Termux.
+ *
+ * The correct extra key for the working directory is
+ * `com.termux.RUN_COMMAND_WORKDIR` — NOT `com.termux.RUN_COMMAND_SERVICE.EXTRA_WORKDIR`.
+ * The previous key was silently ignored by Termux's RunCommandService, so the
+ * cwd was never actually applied. Fixed in 1.5.
+ */
 @OptIn(DelicateCoroutinesApi::class)
+@Suppress("unused")
 fun runCommandTermux(
     context: Context,
     exe: String,
@@ -89,13 +109,11 @@ fun runCommandTermux(
                 putExtra("$TERMUX_PKG.RUN_COMMAND_PATH", exe)
                 putExtra("$TERMUX_PKG.RUN_COMMAND_ARGUMENTS", args)
                 putExtra("$TERMUX_PKG.RUN_COMMAND_BACKGROUND", background)
-                cwd?.let { cwd ->
-                    putExtra("$TERMUX_PKG.RUN_COMMAND_SERVICE.EXTRA_WORKDIR", cwd)
-                }
+                cwd?.let { putExtra("$TERMUX_PKG.RUN_COMMAND_WORKDIR", it) }
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
-            }else{
+            } else {
                 context.startService(intent)
             }
         }
@@ -103,6 +121,7 @@ fun runCommandTermux(
 }
 
 
+@Suppress("unused")
 fun runBashScript(
     context: Context, script: String, workingDir: String? = null, background: Boolean = false
 ) {
@@ -121,6 +140,7 @@ fun runBashScript(
  * Replaces the legacy Xed-Editor cross-process terminal launch path which
  * referenced a class that does not exist in this project.
  */
+@Suppress("unused")
 fun launchInternalTerminal(context: Context, terminalCommand: TerminalCommand) {
     pendingCommand = terminalCommand
     context.startActivity(
@@ -137,3 +157,4 @@ fun launchTermux(): Boolean {
     application!!.startActivity(application!!.packageManager.getLaunchIntentForPackage(TERMUX_PKG))
     return true
 }
+

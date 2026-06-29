@@ -1,7 +1,6 @@
 package com.rk.terminal.ui.navHosts
 
 
-import android.app.Activity
 import android.content.res.Configuration
 import android.os.Build
 import android.view.Window

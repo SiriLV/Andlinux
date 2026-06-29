@@ -469,7 +469,19 @@ fun TerminalScreen(
                                     title = {
                                         Column {
                                             Text(text = "AndLinux", color = color)
-                                            Text(style = MaterialTheme.typography.bodySmall,text = mainActivityActivity.sessionBinder?.getService()?.currentSession?.value?.first + " (${getNameOfWorkingMode(mainActivityActivity.sessionBinder?.getService()?.currentSession?.value?.second)})",color = color)
+                                            // Null-safe session title. sessionBinder is normally bound
+                                            // by the time TerminalScreen is composed, but defensive
+                                            // null-handling avoids an NPE in the title bar if the
+                                            // service disconnects mid-render.
+                                            val sessionInfo = mainActivityActivity.sessionBinder
+                                                ?.getService()?.currentSession?.value
+                                            val sessionId = sessionInfo?.first ?: "—"
+                                            val sessionMode = getNameOfWorkingMode(sessionInfo?.second)
+                                            Text(
+                                                style = MaterialTheme.typography.bodySmall,
+                                                text = "$sessionId ($sessionMode)",
+                                                color = color,
+                                            )
                                         }
                                     },
                                     navigationIcon = {
