@@ -71,7 +71,6 @@ import java.io.File
 import java.util.Properties
 import java.math.RoundingMode
 import java.text.DecimalFormat
-import kotlin.math.roundToInt
 
 
 private const val min_text_size = 10f

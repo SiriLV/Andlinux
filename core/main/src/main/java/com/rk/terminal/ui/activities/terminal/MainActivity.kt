@@ -1,14 +1,10 @@
 package com.rk.terminal.ui.activities.terminal
 
-import android.app.Activity
-import android.app.PendingIntent
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.graphics.Rect
-import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -19,13 +15,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.core.content.ContextCompat
@@ -35,12 +26,10 @@ import androidx.navigation.compose.rememberNavController
 import com.rk.terminal.service.SessionService
 import com.rk.terminal.ui.navHosts.MainActivityNavHost
 import com.rk.terminal.ui.routes.MainActivityRoutes
-import com.rk.terminal.ui.screens.terminal.TerminalScreen
 import com.rk.terminal.ui.screens.terminal.terminalView
 import com.rk.terminal.ui.theme.KarbonTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.File
 
 class MainActivity : ComponentActivity() {
     var sessionBinder:SessionService.SessionBinder? = null

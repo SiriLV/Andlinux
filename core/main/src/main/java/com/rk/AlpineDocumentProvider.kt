@@ -14,8 +14,6 @@ import android.provider.DocumentsProvider
 import android.util.Log
 import android.webkit.MimeTypeMap
 import com.rk.libcommons.alpineHomeDir
-import com.rk.resources.getString
-import com.rk.resources.strings
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
