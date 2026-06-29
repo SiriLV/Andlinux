@@ -149,7 +149,7 @@ class TerminalBackEnd(val terminal: TerminalView,val activity: MainActivity) : T
     }
 
     override fun getInputMode(): Int {
-        // Keep the original ReTerminal keyboard path. Huawei and several Android IMEs commit
+        // Keep the original AndLinux keyboard path. Huawei and several Android IMEs commit
         // terminal text immediately with VISIBLE_PASSWORD + NO_SUGGESTIONS, while TYPE_CLASS_TEXT
         // can buffer words until space is pressed.
         return 2

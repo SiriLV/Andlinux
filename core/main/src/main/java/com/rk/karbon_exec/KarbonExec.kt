@@ -115,11 +115,17 @@ fun runBashScript(
     )
 }
 
+/**
+ * Launch AndLinux's own terminal activity with a pending command.
+ *
+ * Replaces the legacy Xed-Editor cross-process terminal launch path which
+ * referenced a class that does not exist in this project.
+ */
 fun launchInternalTerminal(context: Context, terminalCommand: TerminalCommand) {
     pendingCommand = terminalCommand
     context.startActivity(
         Intent(
-            context, Class.forName("com.rk.xededitor.ui.activities.terminal.Terminal")
+            context, Class.forName("com.rk.terminal.ui.activities.terminal.MainActivity")
         )
     )
 }

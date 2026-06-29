@@ -7,7 +7,7 @@ curl -LO https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.11.0.jar
 mv apktool_2.11.0.jar apktool.jar
 curl -LO https://raw.githubusercontent.com/daniellockyer/apkdiff/refs/heads/master/apkdiff.py
 
-REPO="RohitKushvaha01/ReTerminal"
+REPO="SiriLV/Andlinux"
 RELEASE_FILE="release.apk"
 
 LATEST_RELEASE_URL="https://github.com/$REPO/releases/latest"
@@ -23,5 +23,3 @@ echo "Downloading APK from: $APK_URL"
 curl -L -o "$RELEASE_FILE" "$APK_URL"
 
 python apkdiff.py $BUILT_APK $RELEASE_FILE
-
-

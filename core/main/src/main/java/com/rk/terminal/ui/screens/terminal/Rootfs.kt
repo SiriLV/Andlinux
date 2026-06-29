@@ -1,23 +1,30 @@
 package com.rk.terminal.ui.screens.terminal
 
-import android.os.Environment
 import androidx.compose.runtime.mutableStateOf
 import com.rk.libcommons.application
 import com.rk.libcommons.child
-import com.rk.terminal.App
-import java.io.File
 
+/**
+ * Holds the working directory used by the Alpine downloader and proot init scripts.
+ *
+ * Historically this was called `reTerminal`; it has been renamed to `andLinux` so the
+ * source code matches the project identity. The on-disk location itself did not change.
+ */
 object Rootfs {
-    val reTerminal = application!!.filesDir
+    val andLinux = application!!.filesDir
 
     init {
-        if (reTerminal.exists().not()){
-            reTerminal.mkdirs()
+        if (!andLinux.exists()) {
+            andLinux.mkdirs()
         }
     }
 
     var isDownloaded = mutableStateOf(isFilesDownloaded())
-    fun isFilesDownloaded(): Boolean{
-        return reTerminal.exists() && reTerminal.child("proot").exists() && reTerminal.child("libtalloc.so.2").exists() && reTerminal.child("alpine.tar.gz").exists()
+
+    fun isFilesDownloaded(): Boolean {
+        return andLinux.exists() &&
+            andLinux.child("proot").exists() &&
+            andLinux.child("libtalloc.so.2").exists() &&
+            andLinux.child("alpine.tar.gz").exists()
     }
 }

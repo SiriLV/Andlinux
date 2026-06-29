@@ -6,10 +6,12 @@ import com.rk.terminal.BuildConfig
 
 private fun getFilesDir(): File{
     return if (application == null){
+        // Fallback only used very early during process init. Keep it in sync with the
+        // actual applicationId declared in app/build.gradle.kts (and its .debug suffix).
         if (BuildConfig.DEBUG){
-            File("/data/data/com.rk.terminal.debug/files")
+            File("/data/data/com.term.andlinux.debug/files")
         }else{
-            File("/data/data/com.rk.terminal/files")
+            File("/data/data/com.term.andlinux/files")
         }
     }else{
         application!!.filesDir

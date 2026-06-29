@@ -6,18 +6,31 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def patch(path, pairs):
     p = ROOT / path
+    if not p.exists():
+        return
     text = p.read_text()
+    changed = False
     for old, new in pairs:
-        text = text.replace(old, new)
-    p.write_text(text)
+        if old in text:
+            text = text.replace(old, new)
+            changed = True
+    if changed:
+        p.write_text(text)
 
 
+# AndLinux branding patches. These are idempotent: if the source is already
+# branded as AndLinux (which is the case in this repository), these are no-ops.
+# They remain in place so that re-syncing from an upstream that still uses the
+# old name will be auto-rebranded at build time.
 patch('settings.gradle.kts', [('rootProject.name = "ReTerminal"', 'rootProject.name = "AndLinux"')])
 patch('core/main/src/main/java/com/rk/terminal/ui/screens/terminal/TerminalScreen.kt', [('Text(text = "ReTerminal"', 'Text(text = "AndLinux"')])
 patch('core/main/src/main/java/com/rk/AlpineDocumentProvider.kt', [('val applicationName = "ReTerminal"', 'val applicationName = "AndLinux"'), ('Log.w("Alpine",', 'Log.w("AndLinux",')])
 patch('core/main/src/main/java/com/rk/terminal/service/SessionService.kt', [('.setContentTitle("ReTerminal")', '.setContentTitle("AndLinux")')])
 patch('core/resources/src/main/res/values/strings.xml', [('ReTerminal Android shell', 'AndLinux Android shell')])
 patch('core/resources/src/main/res/values-zh/strings.xml', [('ReTerminal Android Shell', 'AndLinux Android Shell')])
+patch('core/main/src/main/java/com/rk/terminal/ui/screens/terminal/TerminalBackEnd.kt', [('original ReTerminal keyboard', 'original AndLinux keyboard')])
+patch('core/main/src/main/java/com/rk/terminal/ui/screens/terminal/Rootfs.kt', [('val reTerminal = application', 'val andLinux = application')])
+patch('core/main/src/main/java/com/rk/terminal/ui/screens/downloader/Downloader.kt', [('Rootfs.reTerminal', 'Rootfs.andLinux')])
 
 settings = ROOT / 'core/main/src/main/java/com/rk/settings/Settings.kt'
 text = settings.read_text()

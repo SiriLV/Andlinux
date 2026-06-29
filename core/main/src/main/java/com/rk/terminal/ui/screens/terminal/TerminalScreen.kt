@@ -163,8 +163,18 @@ fun TerminalScreen(
 
     LaunchedEffect(Unit){
         withContext(Dispatchers.IO){
+            val savedColorsFile = localDir().child("colors.properties")
+            if (savedColorsFile.exists() && savedColorsFile.canRead()) {
+                runCatching {
+                    FileInputStream(savedColorsFile).use { input ->
+                        val props = Properties()
+                        props.load(input)
+                        TerminalColors.COLOR_SCHEME.updateWith(props)
+                    }
+                }
+            }
             if (context.filesDir.child("background").exists().not()){
-                darkText.value = !isDarkMode
+                darkText.value = if (Settings.terminal_theme == "Default") !isDarkMode else Settings.blackTextColor
             }else if (bitmap.value == null){
                 val fullBitmap = BitmapFactory.decodeFile(context.filesDir.child("background").absolutePath)?.asImageBitmap()
                 if (fullBitmap != null) bitmap.value = fullBitmap
@@ -197,9 +207,57 @@ fun TerminalScreen(
                 onScreenUpdated()
 
 
-                mEmulator?.mColors?.mCurrentColors?.apply {
-                    set(256, getViewColor())
-                    set(258, getViewColor())
+                if (Settings.terminal_theme == "Default") {
+
+
+
+                    if (Settings.terminal_theme == "Default") {
+
+
+
+
+                        mEmulator?.mColors?.mCurrentColors?.apply {
+
+
+
+
+                            set(256, getViewColor())
+
+
+
+
+                            set(258, getViewColor())
+
+
+
+
+                        }
+
+
+
+
+                    } else {
+
+
+
+
+                        mEmulator?.mColors?.reset()
+
+
+
+
+                    }
+
+
+
+                } else {
+
+
+
+                    mEmulator?.mColors?.reset()
+
+
+
                 }
             }
         }
@@ -410,7 +468,7 @@ fun TerminalScreen(
                                     ),
                                     title = {
                                         Column {
-                                            Text(text = "ReTerminal", color = color)
+                                            Text(text = "AndLinux", color = color)
                                             Text(style = MaterialTheme.typography.bodySmall,text = mainActivityActivity.sessionBinder?.getService()?.currentSession?.value?.first + " (${getNameOfWorkingMode(mainActivityActivity.sessionBinder?.getService()?.currentSession?.value?.second)})",color = color)
                                         }
                                     },
@@ -483,9 +541,46 @@ fun TerminalScreen(
                                                 requestFocus()
                                                 isFocusableInTouchMode = true
 
-                                                mEmulator?.mColors?.mCurrentColors?.apply {
-                                                    set(256, color)
-                                                    set(258, color)
+                                                if (Settings.terminal_theme == "Default") {
+
+
+                                                    if (Settings.terminal_theme == "Default") {
+
+
+
+                                                        mEmulator?.mColors?.mCurrentColors?.apply {
+
+
+
+                                                            set(256, color)
+
+
+
+                                                            set(258, color)
+
+
+
+                                                        }
+
+
+
+                                                    } else {
+
+
+
+                                                        mEmulator?.mColors?.reset()
+
+
+
+                                                    }
+
+
+                                                } else {
+
+
+                                                    mEmulator?.mColors?.reset()
+
+
                                                 }
 
                                                 val colorsFile = localDir().child("colors.properties")
@@ -506,9 +601,46 @@ fun TerminalScreen(
                                         terminalView.onScreenUpdated()
                                        val color = getViewColor()
 
-                                        terminalView.mEmulator?.mColors?.mCurrentColors?.apply {
-                                            set(256, color)
-                                            set(258, color)
+                                        if (Settings.terminal_theme == "Default") {
+
+
+                                            if (Settings.terminal_theme == "Default") {
+
+
+
+                                                terminalView.mEmulator?.mColors?.mCurrentColors?.apply {
+
+
+
+                                                    set(256, color)
+
+
+
+                                                    set(258, color)
+
+
+
+                                                }
+
+
+
+                                            } else {
+
+
+
+                                                terminalView.mEmulator?.mColors?.reset()
+
+
+
+                                            }
+
+
+                                        } else {
+
+
+                                            terminalView.mEmulator?.mColors?.reset()
+
+
                                         }
                                     },
                                 )

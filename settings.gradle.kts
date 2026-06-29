@@ -33,7 +33,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ReTerminal"
+rootProject.name = "AndLinux"
 include(":app")
 include(":core:main")
 

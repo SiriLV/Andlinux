@@ -67,8 +67,8 @@ android {
         applicationId = "com.term.andlinux"
         minSdk = 26
         targetSdk = 28
-        versionCode = 11
-        versionName = "1.4.1"
+        versionCode = 12
+        versionName = "1.5"
         vectorDrawables {
             useSupportLibrary = true
         }

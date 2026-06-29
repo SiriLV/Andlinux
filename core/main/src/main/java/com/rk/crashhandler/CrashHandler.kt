@@ -6,34 +6,43 @@ import com.rk.libcommons.child
 import com.rk.libcommons.createFileIfNot
 import kotlin.system.exitProcess
 
+/**
+ * Global crash handler.
+ *
+ * On the main (UI) thread we log the exception and restart the Looper so the
+ * app stays usable after a non-fatal crash. On background threads we terminate
+ * the process so Android can restart it cleanly.
+ */
 object CrashHandler : Thread.UncaughtExceptionHandler {
 
     override fun uncaughtException(thread: Thread, ex: Throwable) {
-        runCatching {
+        logErrorOrExit(ex)
 
-        }.onFailure {
-            it.printStackTrace()
-            exitProcess(1)
-        }
-
-        if (Looper.myLooper() != null) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            // Restart the Looper so the UI thread keeps processing messages.
+            // This effectively swallows crashes that originate from inside Looper.loop().
             while (true) {
                 try {
                     Looper.loop()
                     return
                 } catch (t: Throwable) {
-                    Thread{
-                        t.printStackTrace()
-                        logErrorOrExit(t)
-                    }.start()
+                    logErrorOrExit(t)
                 }
             }
         }
+
+        // Background thread: let the process die so Android can restart it cleanly.
+        exitProcess(1)
     }
 }
 
-fun logErrorOrExit(throwable: Throwable){
+fun logErrorOrExit(throwable: Throwable) {
     runCatching {
-        application!!.filesDir.child("crash.log").createFileIfNot().appendText(throwable.toString())
-    }.onFailure { it.printStackTrace();exitProcess(-1) }
+        val logFile = application!!.filesDir.child("crash.log").createFileIfNot()
+        logFile.appendText("\n==== ${System.currentTimeMillis()} ====\n")
+        logFile.appendText(throwable.stackTraceToString())
+    }.onFailure {
+        it.printStackTrace()
+        exitProcess(-1)
+    }
 }

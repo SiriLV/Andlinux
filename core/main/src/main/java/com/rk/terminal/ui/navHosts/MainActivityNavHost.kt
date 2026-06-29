@@ -31,27 +31,24 @@ var horizontal_statusBar = mutableStateOf(Settings.horizontal_statusBar)
 fun showStatusBar(show: Boolean,window: Window){
     if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q){
         if (show){
-            window.decorView.windowInsetsController!!.show(
+            window.decorView.windowInsetsController?.show(
                 android.view.WindowInsets.Type.statusBars()
             )
         }else{
-            window.decorView.windowInsetsController!!.hide(
+            window.decorView.windowInsetsController?.hide(
                 android.view.WindowInsets.Type.statusBars()
             )
         }
     }else{
+        val controller = WindowInsetsControllerCompat(window, window.decorView)
         if (show){
-            WindowInsetsControllerCompat(window, window.decorView).let { controller ->
-                controller.hide(WindowInsetsCompat.Type.statusBars())
-                controller.systemBarsBehavior =
-                    WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
-            }
+            controller.show(WindowInsetsCompat.Type.statusBars())
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
         }else{
-            WindowInsetsControllerCompat(window,window.decorView).let { controller ->
-                controller.hide(WindowInsetsCompat.Type.statusBars())
-                controller.systemBarsBehavior =
-                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
+            controller.hide(WindowInsetsCompat.Type.statusBars())
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
     }
 }
