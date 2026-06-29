@@ -41,3 +41,4 @@ jobs:
           name: Andlinux-apk
           path: artifacts/Andlinux.apk
 # AndLinux 1.6 stable release build
+# manual trigger
